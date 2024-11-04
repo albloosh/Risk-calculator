@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>حاسبة مخاطر السكري</title>
+    <style>
+        /* Base Styles */
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            direction: rtl;
+            transition: background-color 0.5s ease;
+            color: #333333;
+        }
+        h1 {
+            color: #1B4F72;
+            margin-bottom: 10px;
+        }
+        .slider-container {
+            width: 80%;
+            margin: 20px auto;
+            padding: 15px;
+            border-radius: 10px;
+            background-color: #ebf5fb;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        .slider-label {
+            margin: 10px;
+            font-size: 1.2em;
+            color: #333333;
+        }
+        .bmi-display {
+            margin: 15px;
+            font-size: 1.2em;
+            color: #1B4F72;
+            font-weight: bold;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 10px;
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+        .risk-bar-container {
+            width: 80%;
+            margin: 15px auto;
+            background-color: #ddd;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .risk-bar {
+            height: 20px;
+            width: 0;
+            background-color: #1B9C6C;
+            transition: width 0.5s;
+        }
+        .tips {
+            margin-top: 15px;
+            font-size: 1em;
+            color: #333;
+            padding: 10px;
+            border-radius: 8px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 1em;
+            color: white;
+            background-color: #1B4F72;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #154360;
+        }
+        .educational-content {
+            display: none;
+            margin-top: 20px;
+            background-color: #f9f9f9;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: left;
+            color: #333;
+        }
+        .show-info {
+            font-size: 0.9em;
+            color: #1B4F72;
+            cursor: pointer;
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>حاسبة مخاطر السكري</h1>
+    <p>قم بتعديل المؤشرات لمعرفة خطر إصابتك بالسكري</p>
+
+    <div class="slider-container">
+        <div class="slider-label">الجنس:</div>
+        <label><input type="radio" name="gender" value="male" checked> ذكر</label>
+        <label><input type="radio" name="gender" value="female"> أنثى</label>
+
+        <div class="slider-label">العمر: <span id="ageDisplay">30</span> سنة</div>
+        <input type="range" id="ageSlider" min="18" max="80" value="30" oninput="updateDisplay('ageSlider', 'ageDisplay')">
+
+        <div class="slider-label">الطول (سم): <span id="lengthDisplay">170</span></div>
+        <input type="range" id="lengthSlider" min="140" max="200" value="170" oninput="updateDisplay('lengthSlider', 'lengthDisplay'); updateBMI();">
+
+        <div class="slider-label">الوزن (كجم): <span id="weightDisplay">70</span></div>
+        <input type="range" id="weightSlider" min="40" max="150" value="70" oninput="updateDisplay('weightSlider', 'weightDisplay'); updateBMI();">
+
+        <!-- Display Calculated BMI -->
+        <div class="bmi-display" id="bmiDisplay">BMI: 24.2 - الوزن الصحي يقلل من خطر الإصابة بالسكري</div>
+
+        <div class="slider-label">نشاط بدني (ساعات في الأسبوع): <span id="activityDisplay">3</span> ساعات</div>
+        <input type="range" id="activitySlider" min="0" max="10" value="3" oninput="updateDisplay('activitySlider', 'activityDisplay')">
+
+        <div class="slider-label">التاريخ العائلي للإصابة بالسكري (عدد أفراد الأسرة المصابين): <span id="familyHistoryDisplay">0</span></div>
+        <input type="range" id="familyHistorySlider" min="0" max="5" value="0" oninput="updateDisplay('familyHistorySlider', 'familyHistoryDisplay')">
+
+        <div class="slider-label">سكر الدم (mg/dL): <span id="bgDisplay">90</span></div>
+        <input type="range" id="bgSlider" min="70" max="200" value="90" oninput="updateDisplay('bgSlider', 'bgDisplay')">
+
+        <!-- Separate Systolic and Diastolic BP Sliders -->
+        <div class="slider-label">الضغط الانقباضي (mmHg): <span id="systolicDisplay">120</span></div>
+        <input type="range" id="systolicSlider" min="90" max="180" value="120" oninput="updateDisplay('systolicSlider', 'systolicDisplay')">
+
+        <div class="slider-label">الضغط الانبساطي (mmHg): <span id="diastolicDisplay">80</span></div>
+        <input type="range" id="diastolicSlider" min="60" max="120" value="80" oninput="updateDisplay('diastolicSlider', 'diastolicDisplay')">
+    </div>
+
+    <button onclick="calculateRisk()">احسب المخاطر</button>
+
+    <!-- Risk Visualization Bar -->
+    <div class="risk-bar-container">
+        <div id="riskBar" class="risk-bar"></div>
+    </div>
+
+    <div class="result" id="result"></div>
+
+    <!-- Personalized Tips -->
+    <div class="tips" id="tips"></div>
+
+    <!-- Educational Content Section -->
+    <p class="show-info" onclick="toggleEducationalContent()">معلومات إضافية حول السكري</p>
+    <div class="educational-content" id="educationalContent">
+        <h3>ما هو السكري؟</h3>
+        <p>السكري هو حالة مزمنة تتسم بارتفاع مستويات السكر في الدم. يتطلب ذلك متابعة مستمرة وتغييرًا في نمط الحياة.</p>
+        <h4>أسباب السكري</h4>
+        <ul>
+            <li>عوامل وراثية</li>
+            <li>زيادة الوزن</li>
+            <li>قلة النشاط البدني</li>
+            <li>النظام الغذائي غير الصحي</li>
+        </ul>
+        <h4>طرق الوقاية</h4>
+        <ul>
+            <li>الحفاظ على وزن صحي</li>
+            <li>ممارسة الرياضة بانتظام</li>
+            <li>تجنب الأطعمة الغنية بالسكر والدهون</li>
+            <li>مراقبة مستويات السكر بانتظام</li>
+        </ul>
+    </div>
+
+    <script>
+        function updateDisplay(sliderId, displayId) {
+            document.getElementById(displayId).textContent = document.getElementById(sliderId).value;
+        }
+
+        // Update BMI and display real-time
+        function updateBMI() {
+            let length = parseInt(document.getElementById("lengthSlider").value);
+            let weight = parseInt(document.getElementById("weightSlider").value);
+            let bmi = (weight / ((length / 100) ** 2)).toFixed(1);
+            document.getElementById("bmiDisplay").innerHTML = `BMI: ${bmi} - ${bmi < 25 ? "الوزن الصحي يقلل من خطر الإصابة بالسكري" : "زيادة الوزن ترفع خطر الإصابة بالسكري"}`;
+            calculateRisk();
+        }
+
+        function calculateRisk() {
+            let age = parseInt(document.getElementById("ageSlider").value);
+            let length = parseInt(document.getElementById("lengthSlider").value);
+            let weight = parseInt(document.getElementById("weightSlider").value);
+            let bg = parseInt(document.getElementById("bgSlider").value);
+            let systolicBP = parseInt(document.getElementById("systolicSlider").value);
+            let diastolicBP = parseInt(document.getElementById("diastolicSlider").value);
+            let activity = parseInt(document.getElementById("activitySlider").value);
+            let familyHistory = parseInt(document.getElementById("familyHistorySlider").value);
+            let gender = document.querySelector('input[name="gender"]:checked').value;
+
+            // Calculate BMI
+            let bmi = weight / ((length / 100) ** 2);
+
+            // Determine risk score
+            let riskScore = 0;
+            riskScore += age >= 45 ? 2 : (age >= 35 ? 1 : 0);
+            riskScore += bmi >= 30 ? 2 : (bmi >= 25 ? 1 : 0);
+            riskScore += bg >= 126 ? 2 : (bg >= 100 ? 1 : 0);
+            riskScore += (systolicBP >= 140 || diastolicBP >= 90) ? 2 : ((systolicBP >= 130 || diastolicBP >= 80) ? 1 : 0);
+            riskScore += familyHistory;
+            riskScore += activity < 2 ? 1 : 0;
+            riskScore += gender === "female" ? 1 : 0;
+
+            // Determine risk level, bar width, and color
+            let resultText = "", tipsText = "", riskWidth = (riskScore / 10) * 100;
+            let riskColor = "#1B9C6C"; // Green for low risk
+            if (riskScore >= 7) {
+                resultText = "خطر مرتفع للإصابة بالسكري. يُنصح بمراجعة الطبيب.";
+                tipsText = "اتباع نظام غذائي صحي وزيادة النشاط البدني قد يقللان من الخطر.";
+                riskColor = "#C0392B"; // Red for high risk
+            } else if (riskScore >= 4) {
+                resultText = "خطر متوسط للإصابة بالسكري. الحفاظ على نمط حياة صحي ضروري.";
+                tipsText = "يمكن أن تقلل من الخطر عبر ممارسة التمارين وتناول الطعام الصحي.";
+                riskColor = "#F39C12"; // Orange for medium risk
+            } else {
+                resultText = "خطر منخفض للإصابة بالسكري. استمر في اتباع نمط حياة صحي.";
+                tipsText = "حافظ على نظام غذائي متوازن واستمر في النشاط البدني.";
+                riskColor = "#1B9C6C"; // Green for low risk
+            }
+
+            // Display results and update risk bar
+            document.getElementById("result").innerHTML = resultText;
+            document.getElementById("tips").innerHTML = tipsText;
+            document.getElementById("riskBar").style.width = riskWidth + "%";
+            document.getElementById("riskBar").style.backgroundColor = riskColor;
+        }
+
+        function toggleEducationalContent() {
+            const content = document.getElementById("educationalContent");
+            content.style.display = content.style.display === "none" ? "block" : "none";
+        }
+
+        // Initialize BMI and risk on load
+        updateBMI();
+    </script>
+
+</body>
+</html>
